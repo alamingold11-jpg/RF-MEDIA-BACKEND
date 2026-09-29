@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -9,17 +9,14 @@ export default function handler(req, res) {
     return res.status(200).end();
   }
 
-  // টেস্ট ক্রেডেন্সিয়াল
   const mchId = "1000";
   const apiKey = "4035fcd2720e1b06ea455bdde411012";
-  const gatewayUrl = "https://sandbox.wpay.life/pay";
+  const gatewayUrl = "https://sandbox.wpay.life/pay"; // Athoba Wpay-er thik je endpoint document-e deya ache
 
-  // টেস্টের জন্য ডামি ডেটা (বা রিকোয়েস্ট থেকে আসা ডেটা)
   const amount = req.body?.amount || req.query?.amount || "100.00";
   const orderId = "ORD_" + Date.now();
 
-  // Wpay সাইন বা সিগনেচার তৈরির নিয়ম (MD5 Hash)
-  // ফরম্যাট: mchId + orderId + amount + key (ডকুমেন্টেশন অনুযায়ী সাজাতে হবে)
+  // Wpay sign generate korar rules (example format)
   const rawString = `mchId=${mchId}&orderId=${orderId}&amount=${amount}&key=${apiKey}`;
   const sign = crypto.createHash('md5').update(rawString).digest('hex').toUpperCase();
 
@@ -31,10 +28,29 @@ export default function handler(req, res) {
     callbackUrl: "https://rf-media-backend.vercel.app/api/callback"
   };
 
-  return res.status(200).json({
-    success: true,
-    message: "Ready to send request to Wpay Sandbox",
-    gateway: gatewayUrl,
-    requestData: payload
-  });
+  try {
+    // Wpay sandbox gateway-te fetch request pathano
+    const gatewayResponse = await fetch(gatewayUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await gatewayResponse.json();
+
+    return res.status(200).json({
+      success: true,
+      message: "Gateway request executed successfully",
+      gatewayResult: result
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to connect with Wpay gateway",
+      error: error.message,
+      sentPayload: payload
+    });
+  }
 }
