@@ -9,7 +9,6 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // লাইভ মার্চেন্ট আইডি ও সিক্রেট কি
   const mchId = "5393";
   const apiKey = "d8490b215ef5248d7fb693a101f9898d";
   const gatewayUrl = "https://api.wpay.life/v1/Collect";
@@ -55,13 +54,17 @@ export default async function handler(req, res) {
 
     const result = await gatewayResponse.json();
 
-    // সরাসরি ব্রাউজারে JSON রেসপন্স এবং পেমেন্ট লিংক দেখানোর জন্য
+    // গেটওয়ে থেকে লিংক সফলভাবে আসলে সরাসরি রিডাইরেক্ট করে দেবে
+    if (result.code === 0 && result.data && result.data.url) {
+      res.writeHead(302, { Location: result.data.url });
+      return res.end();
+    }
+
     return res.status(200).json({
-      success: true,
-      message: "Gateway response received successfully",
+      success: false,
+      message: "Gateway returned an error",
       gatewayResult: result
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
