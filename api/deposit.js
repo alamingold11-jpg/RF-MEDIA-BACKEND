@@ -55,16 +55,13 @@ export default async function handler(req, res) {
 
     const result = await gatewayResponse.json();
 
-    if (result.code === 0 && result.data && result.data.url) {
-      res.writeHead(302, { Location: result.data.url });
-      return res.end();
-    }
-
+    // সরাসরি ব্রাউজারে JSON রেসপন্স এবং পেমেন্ট লিংক দেখানোর জন্য
     return res.status(200).json({
-      success: false,
-      message: "Gateway returned an error",
+      success: true,
+      message: "Gateway response received successfully",
       gatewayResult: result
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
