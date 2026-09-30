@@ -9,9 +9,10 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const mchId = "1000";
-  const apiKey = "4035fcd2d720e1b06ea455bdde411012";
-  const gatewayUrl = "https://sandbox.okexpay.dev/v1/Collect";
+  // লাইভ মার্চেন্ট আইডি ও সিক্রেট কি
+  const mchId = "5393";
+  const apiKey = "d8490b215ef5248d7fb693a101f9898d";
+  const gatewayUrl = "https://api.wpay.life/v1/Collect";
 
   const amount = req.body?.money || req.query?.money || "100";
   const out_trade_no = "ORD_" + Date.now();
@@ -54,13 +55,11 @@ export default async function handler(req, res) {
 
     const result = await gatewayResponse.json();
 
-    // যদি গেটওয়ে সফলভাবে পেমেন্ট পেজের URL দেয়, তবে সরাসরি রিডাইরেক্ট করে দেব
     if (result.code === 0 && result.data && result.data.url) {
       res.writeHead(302, { Location: result.data.url });
       return res.end();
     }
 
-    // ফেইল করলে JSON এরর দেখাবে
     return res.status(200).json({
       success: false,
       message: "Gateway returned an error",
