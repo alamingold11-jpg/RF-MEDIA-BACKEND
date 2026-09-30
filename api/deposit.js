@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
   const mchId = "1000";
   const apiKey = "4035fcd2d720e1b06ea455bdde411012";
-  const gatewayUrl = "https://sandbox.okexpay.dev/v1/Collect"; // সঠিক স্যান্ডবক্স হোস্ট এবং পাথ
+  const gatewayUrl = "https://sandbox.okexpay.dev/v1/Collect";
 
   const amount = req.body?.money || req.query?.money || "100";
   const out_trade_no = "ORD_" + Date.now();
@@ -54,9 +54,16 @@ export default async function handler(req, res) {
 
     const result = await gatewayResponse.json();
 
+    // যদি গেটওয়ে সফলভাবে পেমেন্ট পেজের URL দেয়, তবে সরাসরি রিডাইরেক্ট করে দেব
+    if (result.code === 0 && result.data && result.data.url) {
+      res.writeHead(302, { Location: result.data.url });
+      return res.end();
+    }
+
+    // ফেইল করলে JSON এরর দেখাবে
     return res.status(200).json({
-      success: true,
-      message: "Request sent to OKExPay Collect API successfully",
+      success: false,
+      message: "Gateway returned an error",
       gatewayResult: result
     });
   } catch (error) {
